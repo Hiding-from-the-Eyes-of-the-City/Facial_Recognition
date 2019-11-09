@@ -1,6 +1,10 @@
 import face_recognition
 import cv2
 import numpy as np
+from mtcnn.mtcnn import MTCNN
+
+detector = MTCNN()
+
 
 # Get a reference to webcam #0 (the default one)
 video_capture = cv2.VideoCapture(1)
@@ -27,8 +31,16 @@ while True:
     # Only process every other frame of video to save time
     if process_this_frame:
         # Find all the faces and face encodings in the current frame of video
-        face_locations = face_recognition.face_locations(rgb_small_frame)
-        print("Face_Locs", face_locations)
+        result_mtcnn = detector.detect_faces(rgb_small_frame)
+        #print("MTCNN", result_mtcnn["box"])
+        fl = []
+        for face in result_mtcnn:
+            bb = face['box']
+            fl.append((bb[1], bb[0]+bb[2], bb[1]+bb[3], bb[0]))
+        #print("MTCNN", fl)
+        face_locations = fl
+        #face_locations = face_recognition.face_locations(rgb_small_frame)
+        #print("Face_Locs", type(face_locations))
         face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
 
         face_names = []
@@ -56,12 +68,18 @@ while True:
         right *= 4
         bottom *= 4
         left *= 4
-
+        
+        bounding_box = result_mtcnn[0]['box']
+        cv2.rectangle(frame,
+                          (bounding_box[0]*4, bounding_box[1]*4),
+                          (bounding_box[0]*4+bounding_box[2]*4, bounding_box[1]*4 + bounding_box[3]*4),
+                          (0,155,255),
+                          2)
         cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
         cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
         font = cv2.FONT_HERSHEY_DUPLEX
         cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
-    cv2.imshow('SMALL_FRAME', small_frame)
+    #cv2.imshow('SMALL_FRAME', small_frame)
     cv2.imshow('Video', frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break

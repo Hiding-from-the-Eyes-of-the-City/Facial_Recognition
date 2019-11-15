@@ -2,6 +2,8 @@ import face_recognition
 import cv2
 import numpy as np
 from mtcnn.mtcnn import MTCNN
+from os import path
+import time
 
 detector = MTCNN()
 
@@ -23,7 +25,15 @@ while True:
     # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
     rgb_small_frame = small_frame[:, :, ::-1]
 
+    np.load.__defaults__=(None, True, True, 'ASCII')
+    
+    while not path.exists('encoding.npy'):
+        time.sleep(1)
+
     known_face_encodings = np.load('encoding.npy')
+    
+    while not path.exists('names.npy'):
+        time.sleep(1)
     known_face_names = np.load('names.npy')
     #print(known_face_encodings.shape)
     #print(known_face_names)
